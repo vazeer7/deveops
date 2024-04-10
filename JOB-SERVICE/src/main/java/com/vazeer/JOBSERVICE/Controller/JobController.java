@@ -18,12 +18,12 @@ public class JobController {
     private JobService jobService;
 
     @GetMapping("/list")
-    public ResponseEntity<List<Job>> getAllJob(){
+    public ResponseEntity<List<ResponseTemplateVo>> getAllJob(){
         return new ResponseEntity<>(jobService.getAllJobs(), HttpStatus.OK);
     }
 
     @GetMapping("/list/{jobId}")
-    public ResponseEntity<List<ResponseTemplateVo>> getJobById(@PathVariable("jobId") Integer jobId){
+    public ResponseEntity<Job> getJobById(@PathVariable("jobId") Integer jobId){
         return new ResponseEntity<>(jobService.getJobById(jobId), HttpStatus.OK);
     }
 

@@ -1,10 +1,13 @@
 package com.vazeer.JOBSERVICE.Service;
 
 import com.vazeer.JOBSERVICE.Clients.CompanyClient;
+import com.vazeer.JOBSERVICE.Clients.ReviewClient;
+import com.vazeer.JOBSERVICE.Mapper.JobMapper;
 import com.vazeer.JOBSERVICE.Model.Job;
 import com.vazeer.JOBSERVICE.Repository.JobRepository;
 import com.vazeer.JOBSERVICE.VO.Company;
 import com.vazeer.JOBSERVICE.VO.ResponseTemplateVo;
+import com.vazeer.JOBSERVICE.VO.Review;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -12,12 +15,12 @@ import org.springframework.web.client.RestTemplate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class JobService {
 
-    @Autowired
-    private RestTemplate restTemplate;
+
 
     @Autowired
     private JobRepository jobRepository;
@@ -25,22 +28,27 @@ public class JobService {
     @Autowired
     private CompanyClient companyClient;
 
-    public List<Job> getAllJobs() {
-        return jobRepository.findAll();
+    @Autowired
+    private ReviewClient reviewClient;
+
+    public List<ResponseTemplateVo> getAllJobs() {
+        List<Job> jobList = jobRepository.findAll();
+
+        return jobList.stream().map(this::convertToDTO).
+                collect(Collectors.toList());
     }
 
-    public List<ResponseTemplateVo> getJobById(Integer jobId) {
-        List<Job> jobs = jobRepository.findAll();
-        List<ResponseTemplateVo> vos = new ArrayList<>();
+    public Job getJobById(Integer jobId) {
+        return jobRepository.findById(jobId).orElse(null);
+    }
 
-        for (Job job: jobs){
-            ResponseTemplateVo vo = new ResponseTemplateVo();
-            Company company = companyClient.getCompany(job.getCompanyId());
-            vo.setCompany(company);
+    private ResponseTemplateVo convertToDTO(Job job){
+        Company company = companyClient.getCompany(job.getCompanyId());
+        List<Review> review = reviewClient.getReviewById(job.getCompanyId());
 
-            vos.add(vo);
-        }
-        return vos;
+        ResponseTemplateVo vo = JobMapper.mapResponseTemplateVo(job, company, review);
+
+        return vo;
     }
 
     public Job addJob(Job job) {
