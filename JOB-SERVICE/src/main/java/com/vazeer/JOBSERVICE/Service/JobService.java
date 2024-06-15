@@ -8,19 +8,22 @@ import com.vazeer.JOBSERVICE.Repository.JobRepository;
 import com.vazeer.JOBSERVICE.VO.Company;
 import com.vazeer.JOBSERVICE.VO.ResponseTemplateVo;
 import com.vazeer.JOBSERVICE.VO.Review;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Service
+@Repository
 public class JobService {
 
-
+    int attempt = 0;
 
     @Autowired
     private JobRepository jobRepository;
@@ -31,11 +34,21 @@ public class JobService {
     @Autowired
     private ReviewClient reviewClient;
 
+//    @CircuitBreaker(name = "companyBreaker", fallbackMethod = "companyBreakerFallback")
+//    @Retry(name = "companyBreaker", fallbackMethod = "companyBreakerFallback")
+    @RateLimiter(name = "companyBreaker")
     public List<ResponseTemplateVo> getAllJobs() {
+        System.out.println("Attempt"+ ++attempt);
         List<Job> jobList = jobRepository.findAll();
 
         return jobList.stream().map(this::convertToDTO).
                 collect(Collectors.toList());
+    }
+
+    public List<String> companyBreakerFallback(Exception e){
+        List<String> list = new ArrayList<>();
+        list.add("Dummy");
+        return list;
     }
 
     public Job getJobById(Integer jobId) {

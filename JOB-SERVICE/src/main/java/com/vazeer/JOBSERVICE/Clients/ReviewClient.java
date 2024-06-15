@@ -10,6 +10,6 @@ import java.util.List;
 @FeignClient(name = "REVIEW-SERVICE", url = "http://localhost:8003")
 public interface ReviewClient {
 
-    @GetMapping("/reviews")
+    @GetMapping("/reviews ")
     List<Review> getReviewById(@RequestParam("companyId") Integer companyId);
 }
